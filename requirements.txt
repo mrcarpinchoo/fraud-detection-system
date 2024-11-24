@@ -2,4 +2,5 @@ cassandra-driver
 fastapi[all]
 pydgraph
 pymongo
+python-dotenv
 requests
