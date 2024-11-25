@@ -1,7 +1,11 @@
+# core modules
+import os
+
 # third-party modules
+from dotenv import load_dotenv
 import requests
 
-def signUp(apiUrl):
+def signUp():
     print("Sign Up")
 
     name = input("Enter your name: ")
@@ -17,10 +21,13 @@ def signUp(apiUrl):
     # request
     suffix = "/customers"
 
-    endpoint = f"{apiUrl}{suffix}"
+    endpoint = f"{API_URL}{suffix}"
 
     res = requests.post(endpoint, json = customer)
 
     if not res.ok: print(f"Failed to post customer: {res}")
     else: print(f"Customer created successfully! {customer}")
 # end def
+
+# environment variables
+API_URL = os.getenv("API_URL", "http://localhost:8000/api")

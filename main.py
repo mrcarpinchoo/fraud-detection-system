@@ -20,21 +20,19 @@ def printMenu():
     print()
 # end def
 
-# environment variables
-API_URL = os.getenv("API_URL", "http://localhost:8000/api")
-
-USER_EMAIL = os.getenv("USER_EMAIL")
-
-load_dotenv() # loads environment variables from .env file
-
 def main():
+    load_dotenv() # loads environment variables from .env file
+
+    # environment variables
+    USER_EMAIL = os.getenv("USER_EMAIL")
+
     while (True):
         printMenu()
 
         opt = int(input("Enter your choice: "))
 
         if opt == 0: break
-        elif opt == 1: mongodbUtils.signUp(API_URL)
+        elif opt == 1: mongodbUtils.signUp()
     # end while
 # end def
 
