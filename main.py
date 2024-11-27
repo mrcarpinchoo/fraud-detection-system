@@ -12,7 +12,9 @@ import mongodbUtils
 def printMenu():
     options = {
         0: "Exit",
-        1: "Sign up"
+        1: "Sign up",
+        2: "Create new account",
+        3: "Retrieve customer information"
     }
 
     for key in options.keys(): print(f"{key}. {options[key]}")
@@ -33,6 +35,8 @@ def main():
 
         if opt == 0: break
         elif opt == 1: mongodbUtils.signUp()
+        elif opt == 2: mongodbUtils.createAccount(USER_EMAIL)
+        elif opt == 3: mongodbUtils.retrieveCustomerInformation(USER_EMAIL)
     # end while
 # end def
 

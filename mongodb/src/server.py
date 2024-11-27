@@ -12,11 +12,15 @@ app = FastAPI() # starts a FastAPI application
 
 @app.on_event("startup")
 def startupDBClient():
-    # MongoDB client connection
-    app.mongoClient = conn.mongoClient 
-    app.database = conn.database
+    try:
+        # MongoDB client connection
+        app.mongoClient = conn.mongoClient
+        app.database = conn.database
+        
+        app.mongoClient.admin.command('ping') # tests connection by pinging the server
 
-    print("Connected to MongoDB successfully!")
+        print("Connected to MongoDB successfully!")
+    except Exception as e: print(f"Failed to connect to MongoDB: {e}")
 # end def
 
 @app.on_event("shutdown")
