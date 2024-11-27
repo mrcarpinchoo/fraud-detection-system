@@ -44,7 +44,7 @@ def getCustomerByEmail(email):
     return res.json()
 # end def
 
-def createNewAccount(customerEmail):
+def createAccount(customerEmail):
     print("Create New Account")
 
     customer = getCustomerByEmail(customerEmail)
@@ -58,6 +58,23 @@ def createNewAccount(customerEmail):
 
     if not res.ok: print(f"Failed to post account: {res.json()}")
     else: print(f"Account created successfully! {res.json()}")
+# end def
+
+def retrieveCustomerInformation(customerEmail):
+    print("Retrieve Customer Information")
+
+    print()
+
+    customer = getCustomerByEmail(customerEmail)
+
+    print(f"{'Customer:'.ljust(10)} {customer['name']}")
+    print(f"{'Email:'.ljust(10)} {customer['email']}")
+
+    print()
+
+    for account in customer["accounts"]: print(f"Account {account['number']} | ".ljust(25) + f"Balance: {account['balance']}")
+
+    print()
 # end def
 
 # environment variables
