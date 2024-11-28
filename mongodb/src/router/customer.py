@@ -6,7 +6,6 @@ from fastapi.encoders import jsonable_encoder
 
 # custom modules
 from mongodb.src.model.Customer import Customer, Account
-# from mongodb.src.model.Transaction import Transaction
 
 router = APIRouter()
 

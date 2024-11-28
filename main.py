@@ -14,7 +14,8 @@ def printMenu():
         0: "Exit",
         1: "Sign up",
         2: "Create new account",
-        3: "Retrieve customer information"
+        3: "Retrieve customer information",
+        4: "Perform transaction"
     }
 
     for key in options.keys(): print(f"{key}. {options[key]}")
@@ -26,7 +27,7 @@ def main():
     load_dotenv() # loads environment variables from .env file
 
     # environment variables
-    USER_EMAIL = os.getenv("USER_EMAIL")
+    USER_EMAIL = os.getenv("USER_EMAIL", "lionel.messi@iteso.mx")
 
     while (True):
         printMenu()
@@ -37,6 +38,7 @@ def main():
         elif opt == 1: mongodbUtils.signUp()
         elif opt == 2: mongodbUtils.createAccount(USER_EMAIL)
         elif opt == 3: mongodbUtils.retrieveCustomerInformation(USER_EMAIL)
+        elif opt == 4: mongodbUtils.performTransaction(USER_EMAIL)
     # end while
 # end def
 
