@@ -27,7 +27,7 @@ def main():
     load_dotenv() # loads environment variables from .env file
 
     # environment variables
-    USER_EMAIL = os.getenv("USER_EMAIL", "lionel.messi@iteso.mx")
+    CUSTOMER_EMAIL = os.getenv("CUSTOMER_EMAIL", "lionel.messi@iteso.mx")
 
     while (True):
         printMenu()
@@ -36,9 +36,9 @@ def main():
 
         if opt == 0: break
         elif opt == 1: mongodbUtils.signUp()
-        elif opt == 2: mongodbUtils.createAccount(USER_EMAIL)
-        elif opt == 3: mongodbUtils.retrieveCustomerInformation(USER_EMAIL)
-        elif opt == 4: mongodbUtils.performTransaction(USER_EMAIL)
+        elif opt == 2: mongodbUtils.createAccount(CUSTOMER_EMAIL)
+        elif opt == 3: mongodbUtils.retrieveCustomerInformation(CUSTOMER_EMAIL)
+        elif opt == 4: mongodbUtils.performTransaction(CUSTOMER_EMAIL)
     # end while
 # end def
 

@@ -1,5 +1,3 @@
-# core modules
-
 # third-party modules
 from fastapi import APIRouter, Body, HTTPException, Request, Response, status
 from fastapi.encoders import jsonable_encoder
@@ -16,32 +14,50 @@ router = APIRouter()
     status_code = status.HTTP_201_CREATED
 )
 def performTransaction(request: Request, transaction: Transaction = Body(...)):
-    transactionType = transaction.transactionType
+    transactionType = transaction.transaction_type
+
     try:
-        if transactionType == "deposit":
-            transactionResult = request.app.database["transactions"].insert_one(jsonable_encoder(transaction))
+        transactionResult = request.app.database["transactions"].insert_one(jsonable_encoder(transaction))
+            
+        if not transactionResult: raise Exception(f"Failed to perform {transactionType}.")
+        # end if
 
-            if not transactionResult: raise Exception("Failed to perform transaction.")
-            # end if
+        if transactionType in ["deposit", "withdrawal"]:
+            selection = { "account_number": transaction.account_number }
 
-            selection = {
-                "email": transaction.customer_email,
-                "accounts.number": transaction.account_number
+            updateOperation = { 
+                "$inc": { 
+                    "account_balance": transaction.transaction_amount
+                        if transactionType == "deposit"
+                        else -transaction.transaction_amount
+                }
             }
 
-            updateOperation = { "$inc": { "accounts.$.balance": transaction.amount } }
+            updateBalanceResult = request.app.database["accounts"].update_one(selection, updateOperation) # increases or decreases the account balance
 
-            updateResult = request.app.database["customers"].update_one(selection, updateOperation)
-
-            if not updateResult: raise Exception("Failed to update account balance.")
+            if not updateBalanceResult: raise Exception("Failed to update account balance.")
             # end if
-            
-            return request.app.database["transactions"].find_one({"_id": transactionResult.inserted_id}) # returns customer object
-        elif transactionType == "withdrawal":
-            pass
         elif transactionType == "transfer":
-            pass
+            # updating payer account
+            payerSelection = { "account_number": transaction.transaction_details["payer_account_number"] }
+
+            payerUpdateOperation = { "$inc": { "account_balance": -transaction.transaction_amount } }
+
+            updateBalanceResult = request.app.database["accounts"].update_one(payerSelection, payerUpdateOperation) # increases or decreases the account balance
+
+            if not updateBalanceResult: raise Exception("Failed to update payer account balance.")
+
+            # updating beneficiary account
+            beneficiarySelection = { "account_number": transaction.transaction_details["beneficiary_account_number"] }
+
+            beneficiaryUpdateOperation = { "$inc": { "account_balance": transaction.transaction_amount } }
+
+            updateBalanceResult = request.app.database["accounts"].update_one(beneficiarySelection, beneficiaryUpdateOperation) # increases or decreases the account balance
+
+            if not updateBalanceResult: raise Exception("Failed to update beneficiary account balance.")
         # end if-elif
+
+        return request.app.database["transactions"].find_one({"_id": transactionResult.inserted_id}) # returns transaction object
     except Exception as e: raise HTTPException(
         status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
         detail = f"Internal server error: {e}"

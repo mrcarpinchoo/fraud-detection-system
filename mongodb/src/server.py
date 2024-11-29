@@ -6,6 +6,7 @@ from fastapi import FastAPI
 # custom modules
 import mongodb.db.connection as conn
 import mongodb.src.router.customer as customerRouter
+import mongodb.src.router.account as accountRouter
 import mongodb.src.router.transaction as transactionRouter
 
 app = FastAPI() # starts a FastAPI application
@@ -31,4 +32,5 @@ def shutdownDBClient():
 # end def
 
 app.include_router(customerRouter.router, tags = ["customer"], prefix = "/api/customers") # includes the /api/customers APIRouter in the same current APIRouter
+app.include_router(accountRouter.router, tags = ["accounts"], prefix = "/api/accounts") # includes the /api/accounts APIRouter in the same current APIRouter
 app.include_router(transactionRouter.router, tags = ["transactions"], prefix = "/api/transactions") # includes the api/transactions APIRouter in the same current APIRouter
