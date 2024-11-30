@@ -5,6 +5,7 @@ from model import (
     bulk_insert_from_json,
     query_recent_transactions,
     query_anomalies,
+    query_withdrawals,
     query_login_attempts,
     query_cross_border_transactions,
 )
@@ -43,12 +44,17 @@ def main():
     for row in query_anomalies(session):
         print(row)
 
-    # 3. Query Customer Login Attempts
+    # 3. Query Anomalies
+    print("\nAnomaly Detection Results:")
+    for row in query_withdrawals(session):
+        print(row)
+
+    # 4. Query Customer Login Attempts
     print("\nCustomer Login Attempts:")
     for row in query_login_attempts(session, limit=5):
         print(row)
 
-    # 4. Query Cross-Border Transactions
+    # 5. Query Cross-Border Transactions
     print("\nCross-Border Transactions:")
     for row in query_cross_border_transactions(session):
         print(row)

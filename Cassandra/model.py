@@ -204,7 +204,7 @@ def query_anomalies(session):
     return list(rows)
 
 
-def query_anomalies(session):
+def query_withdrawals(session):
     query = """
     SELECT * FROM Frequent_Withdrawals;
     """
