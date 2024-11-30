@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # core modules
 import os, pydgraph
 
@@ -98,13 +96,13 @@ def handleTransactionHistoryCassandra():
         option = int(input("Enter your choice: "))
 
         if option == 1:
-            cassandraUtils.query_recent_transactions(session, limit=10)
+            cassandraUtils.query_recent_transactions(session)
         elif option == 2:
             cassandraUtils.query_withdrawals(session)
         elif option == 3:
             cassandraUtils.query_anomalies(session)
         elif option == 4:
-            cassandraUtils.query_login_attempts(session, limit=5)
+            cassandraUtils.query_login_attempts(session)
         elif option == 5:
             cassandraUtils.query_cross_border_transactions(session)
         else:
@@ -127,8 +125,10 @@ def main():
             opt = int(input("Enter your choice: "))
 
             if opt == 0:
-                '''mongodb_data.load_data_from_json()
-                dgraphUtils.load_data(dgraph_client)'''
+                mongodb_data.load_data_from_json()
+                dgraphUtils.load_data(dgraph_client)
+                cassandraUtils.create_keyspace(session)
+                cassandraUtils.create_tables(session)
                 cassandraUtils.bulk_insert_from_json(session, data)
             elif opt == 1:
                 mongodbUtils.signUp()

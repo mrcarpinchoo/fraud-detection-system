@@ -1,12 +1,13 @@
 from cassandra.cluster import Cluster
 import uuid
 from datetime import datetime
-from cassandra_config import CASSANDRA_HOSTS, CASSANDRA_PORT, KEYSPACE
 import json
+CASSANDRA_HOSTS = ['127.0.0.1']
+CASSANDRA_PORT = 9042
+KEYSPACE = 'fraud_detection'
 
 with open("example_data.json", "r") as file:
     data = json.load(file)
-
 
 # =======================
 # Cassandra Connection
@@ -15,9 +16,8 @@ with open("example_data.json", "r") as file:
 def connect_to_cassandra():
     cluster = Cluster(contact_points=CASSANDRA_HOSTS, port=CASSANDRA_PORT)
     session = cluster.connect()
-    session.set_keyspace(KEYSPACE)  # Set the keyspace immediately
+    session.set_keyspace(KEYSPACE)
     return session
-
 
 # =======================
 # Create Keyspace
@@ -43,9 +43,9 @@ def create_tables(session):
     tables = [
         """
         CREATE TABLE IF NOT EXISTS Transaction_History (
-            account_id uuid,
-            transaction_timestamp timestamp,
-            transaction_id uuid,
+            account_id text,
+            transaction_timestamp text,
+            transaction_id text,
             amount decimal,
             transaction_type text,
             location text,
@@ -54,27 +54,27 @@ def create_tables(session):
         """,
         """
         CREATE TABLE IF NOT EXISTS Anomaly_Detection (
-            account_id uuid,
-            transaction_timestamp timestamp,
-            transaction_id uuid,
+            account_id text,
+            transaction_timestamp text,
+            transaction_id text,
             anomaly_type text,
-            anomaly_score int,
+            anomaly_score decimal,
             PRIMARY KEY (account_id, transaction_timestamp)
         ) WITH CLUSTERING ORDER BY (transaction_timestamp DESC);
         """,
         """
         CREATE TABLE IF NOT EXISTS Frequent_Withdrawals (
-            account_id uuid,
-            transaction_timestamp timestamp,
-            transaction_id uuid,
+            account_id text,
+            transaction_timestamp text,
+            transaction_id text,
             amount decimal,
             PRIMARY KEY (account_id, transaction_timestamp)
         ) WITH CLUSTERING ORDER BY (transaction_timestamp DESC);
         """,
         """
         CREATE TABLE IF NOT EXISTS Customer_Login_History (
-            customer_id uuid,
-            login_timestamp timestamp,
+            customer_id text,
+            login_timestamp text,
             ip_address text,
             login_success boolean,
             PRIMARY KEY (customer_id, login_timestamp)
@@ -82,9 +82,9 @@ def create_tables(session):
         """,
         """
         CREATE TABLE IF NOT EXISTS Cross_Border_Transactions (
-            account_id uuid,
-            transaction_timestamp timestamp,
-            transaction_id uuid,
+            account_id text,
+            transaction_timestamp text,
+            transaction_id text,
             foreign_location text,
             amount decimal,
             PRIMARY KEY (account_id, transaction_timestamp)
@@ -100,15 +100,17 @@ def create_tables(session):
 # =======================
 
 def insert_Customer_Login_History(session, customer, login):
+    print("adios")
     session.execute("""
         INSERT INTO Customer_Login_History (customer_id, login_timestamp, ip_address, login_success)
         VALUES (%s, %s, %s, %s);
     """, (
-        uuid.UUID(customer["customer_id"]),
-        datetime.fromtimestamp(login["login_timestamp"]),
+        customer["customer_id"],
+        login["login_timestamp"],
         login["ip_address"],
         login["login_success"]
     ))
+    print("adios")
 
 
 def insert_Cross_Border_Transactions(session, account, transaction):
@@ -118,9 +120,9 @@ def insert_Cross_Border_Transactions(session, account, transaction):
         INSERT INTO Cross_Border_Transactions (account_id, transaction_timestamp, transaction_id, foreign_location, amount)
         VALUES (%s, %s, %s, %s, %s);
     """, (
-        uuid.UUID(account["account_id"]),
-        datetime.fromtimestamp(transaction["transaction_timestamp"]),
-        uuid.UUID(transaction["transaction_id"]),
+        account["account_id"],
+        transaction["transaction_timestamp"],
+        transaction["transaction_id"],
         transaction["location"],
         transaction["transaction_amount"]
     ))
@@ -131,9 +133,9 @@ def insert_Transaction_History(session, account, transaction):
         INSERT INTO Transaction_History (account_id, transaction_timestamp, transaction_id, amount, transaction_type, location)
         VALUES (%s, %s, %s, %s, %s, %s);
     """, (
-        uuid.UUID(account["account_id"]),
-        datetime.fromtimestamp(transaction["transaction_timestamp"]),
-        uuid.UUID(transaction["transaction_id"]),
+        account["account_id"],
+        transaction["transaction_timestamp"],
+        transaction["transaction_id"],
         transaction["transaction_amount"],
         transaction["transaction_type"],
         transaction["location"]
@@ -147,9 +149,9 @@ def insert_Anomaly_Detection(session, account, transaction):
         INSERT INTO Anomaly_Detection (account_id, transaction_timestamp, transaction_id, anomaly_type, anomaly_score)
         VALUES (%s, %s, %s, %s, %s);
     """, (
-        uuid.UUID(account["account_id"]),
-        datetime.fromtimestamp(transaction["transaction_timestamp"]),
-        uuid.UUID(transaction["transaction_id"]),
+        account["account_id"],
+        transaction["transaction_timestamp"],
+        transaction["transaction_id"],
         transaction["anomaly_type"],
         transaction["anomaly_score"]
     ))
@@ -162,9 +164,9 @@ def insert_Frequent_Withdrawals(session, account, transaction):
         INSERT INTO Frequent_Withdrawals (account_id, transaction_timestamp, transaction_id, amount)
         VALUES (%s, %s, %s, %s);
     """, (
-        uuid.UUID(account["account_id"]),
-        datetime.fromtimestamp(transaction["transaction_timestamp"]),
-        uuid.UUID(transaction["transaction_id"]),
+        account["account_id"],
+        transaction["transaction_timestamp"],
+        transaction["transaction_id"],
         transaction["transaction_amount"]
     ))
 
@@ -172,7 +174,7 @@ def insert_Frequent_Withdrawals(session, account, transaction):
 def bulk_insert_from_json(session, data):
     # Insert customers and login history
     for customer in data.get("customers", []):
-        for login in customer.get("logins", []):
+        for login in data.get("logins", []):
             insert_Customer_Login_History(session, customer, login)
 
     # Insert accounts and related transactions
@@ -186,17 +188,17 @@ def bulk_insert_from_json(session, data):
                 insert_Frequent_Withdrawals(session, account, transaction)
 
 # =======================
-# Query Functions
+# Query Functions with Print
 # =======================
 
-def query_recent_transactions(session, limit=10):
+def query_recent_transactions(session):
     query = """
-    SELECT * FROM Transaction_History
-    LIMIT %s;
+    SELECT * FROM Transaction_History;
     """
-    print("hola")
-    rows = session.execute(query, limit)
-    print("hola")
+    rows = session.execute(query)
+    print("Recent Transactions:")
+    for row in rows:
+        print(row)
     return list(rows)
 
 
@@ -205,6 +207,9 @@ def query_anomalies(session):
     SELECT * FROM Anomaly_Detection;
     """
     rows = session.execute(query)
+    print("Detected Anomalies:")
+    for row in rows:
+        print(row)
     return list(rows)
 
 
@@ -213,15 +218,20 @@ def query_withdrawals(session):
     SELECT * FROM Frequent_Withdrawals;
     """
     rows = session.execute(query)
+    print("Frequent Withdrawals:")
+    for row in rows:
+        print(row)
     return list(rows)
 
 
-def query_login_attempts(session, limit=5):
+def query_login_attempts(session):
     query = """
-    SELECT * FROM Customer_Login_History
-    LIMIT %s;
+    SELECT * FROM Customer_Login_History;
     """
-    rows = session.execute(query, (limit))
+    rows = session.execute(query)
+    print("Customer Login Attempts:")
+    for row in rows:
+        print(row)
     return list(rows)
 
 
@@ -230,5 +240,7 @@ def query_cross_border_transactions(session):
     SELECT * FROM Cross_Border_Transactions;
     """
     rows = session.execute(query)
+    print("Cross-Border Transactions:")
+    for row in rows:
+        print(row)
     return list(rows)
-

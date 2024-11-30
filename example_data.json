@@ -52,7 +52,7 @@
       "account_number": "123456789",
       "transaction_type": "deposit",
       "transaction_amount": 1000.0,
-      "transaction_timestamp": 1698418345,
+      "transaction_timestamp": "2023-10-26T13:45:35",
       "location": "New York, USA",
       "anomaly_type": "amount",
       "anomaly_score": 0.8
@@ -62,7 +62,7 @@
       "account_number": "987654321",
       "transaction_type": "withdrawal",
       "transaction_amount": 500.0,
-      "transaction_timestamp": 1698418350,
+      "transaction_timestamp": "2023-10-26T14:10:00",
       "location": "New York, USA",
       "anomaly_type": "none",
       "anomaly_score": 0.0
@@ -72,7 +72,7 @@
       "account_number": "111213141",
       "transaction_type": "transfer",
       "transaction_amount": 750.0,
-      "transaction_timestamp": 1698418400,
+      "transaction_timestamp": "2023-10-26T14:00:00",
       "location": "Tokyo, Japan",
       "anomaly_type": "location",
       "anomaly_score": 0.9
