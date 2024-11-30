@@ -13,6 +13,8 @@ app = FastAPI() # starts a FastAPI application
 
 @app.on_event("startup")
 def startupDBClient():
+    app.database = None
+
     try:
         # MongoDB client connection
         app.mongoClient = conn.mongoClient
@@ -22,6 +24,19 @@ def startupDBClient():
 
         print("Connected to MongoDB successfully!")
     except Exception as e: print(f"Failed to connect to MongoDB: {e}")
+
+    try:
+        # customers indexes
+        app.database["customers"].create_index("customer_email", unique = True)
+
+        # accounts indexes
+        app.database["accounts"].create_index("customer_email")
+        app.database["accounts"].create_index("account_number", unique = True)
+
+        # transactions indexes
+        app.database["transactions"].create_index("account_number")
+        app.database["transactions"].create_index("transaction_type")
+    except Exception as e: print(f"Failed to create indexes: {e}")
 # end def
 
 @app.on_event("shutdown")
