@@ -8,11 +8,13 @@ from dotenv import load_dotenv
 import dgraph.client
 
 # custom modules
-import dgraphUtils, mongodbUtils
+import dgraphUtils, mongodbUtils, cassandra.cassandraUtils
 import mongodb.data.data as mongodb_data
+from cassandra.config import KEYSPACE
 
 client_stub = pydgraph.DgraphClientStub('localhost:9080')
 dgraph_client = pydgraph.DgraphClient(client_stub)
+
 
 def printMenu():
     options = {
@@ -23,7 +25,8 @@ def printMenu():
         4: "Perform transaction",
         5: "Dgraph Transaction Menu",
         6: "Generate transaction summary",
-        7: "Exit"
+        7: "Cassandra Transaction Menu",
+        8: "Exit"
     }
 
     for key in options.keys(): print(f"{key}. {options[key]}")
@@ -74,6 +77,39 @@ def handleTransactionHistory():
     except ValueError:
         print("Invalid input. Please enter a number.")
 
+def printTransactionHistoryCassandraMenu():
+    """Submenu for transaction history options."""
+    print("Transaction History Options:")
+    print("1. Show Recent Transaction")
+    print("2. Show Withdrawal Transactions")
+    print("3. Show Transactions with Anomalies")
+    print("4. Show Customer Login History")
+    print("5. Show Cross Border Transactions")
+    print()
+
+def handleTransactionHistoryCassandra():
+    """Handles the transaction history options."""
+    printTransactionHistoryCassandraMenu()
+
+    try:
+        option = int(input("Enter your choice: "))
+
+        if option == 1:
+            cassandra.cassandraUtils.query_recent_transactions()
+        elif option == 2:
+            cassandra.cassandraUtils.query_withdrawals()
+        elif option == 3:
+            cassandra.cassandraUtils.query_anomalies()
+        elif option == 4:
+            cassandra.cassandraUtils.query_login_attempts()
+        elif option == 5:
+            cassandra.cassandraUtils.query_cross_border_transactions()
+        else:
+            print("Invalid option. Please try again.")
+    except ValueError:
+        print("Invalid input. Please enter a number.")
+
+
 def main():
     load_dotenv()  # loads environment variables from .env file
 
@@ -99,8 +135,11 @@ def main():
                 mongodbUtils.performTransaction(CUSTOMER_EMAIL)
             elif opt == 5:
                 handleTransactionHistory()  
-            elif opt == 6: mongodbUtils.generateTransactionSummary(CUSTOMER_EMAIL)
-            elif opt == 7: break
+            elif opt == 6:
+                mongodbUtils.generateTransactionSummary(CUSTOMER_EMAIL)
+            elif opt == 7:
+                handleTransactionHistoryCassandra()
+            elif opt == 8: break
             else:
                 print("Invalid option. Please try again.")
         except ValueError:

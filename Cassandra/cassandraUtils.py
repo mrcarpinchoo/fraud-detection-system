@@ -227,3 +227,4 @@ def query_cross_border_transactions(session):
     """
     rows = session.execute(query)
     return list(rows)
+
