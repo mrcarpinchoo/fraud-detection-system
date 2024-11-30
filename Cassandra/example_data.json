@@ -1,0 +1,93 @@
+{
+  "customers": [
+    {
+      "customer_id": "e2f0b8e4-61f7-11ee-8c99-0242ac120002",
+      "customer_name": "John Doe",
+      "customer_email": "john.doe@example.com",
+      "customer_accounts": [
+        "2f1c622e-61f7-11ee-8c99-0242ac120002",
+        "3f3e766a-61f7-11ee-8c99-0242ac120002"
+      ],
+      "ip_address": "192.168.0.1",
+      "transactions": [
+        "4f28be62-61f7-11ee-8c99-0242ac120002",
+        "5f53b9c0-61f7-11ee-8c99-0242ac120002"
+      ]
+    },
+    {
+      "customer_id": "c12345e6-61f8-11ee-8c99-0242ac120002",
+      "customer_name": "Jane Smith",
+      "customer_email": "jane.smith@example.com",
+      "customer_accounts": ["6b7d182c-61f8-11ee-8c99-0242ac120002"],
+      "ip_address": "10.0.0.2",
+      "transactions": ["7c8df394-61f8-11ee-8c99-0242ac120002"]
+    }
+  ],
+  "accounts": [
+    {
+      "account_id": "2f1c622e-61f7-11ee-8c99-0242ac120002",
+      "customer_email": "john.doe@example.com",
+      "account_number": "123456789",
+      "account_balance": 1500.5,
+      "account_original_location": "New York, USA"
+    },
+    {
+      "account_id": "3f3e766a-61f7-11ee-8c99-0242ac120002",
+      "customer_email": "john.doe@example.com",
+      "account_number": "987654321",
+      "account_balance": 500.75,
+      "account_original_location": "New York, USA"
+    },
+    {
+      "account_id": "6b7d182c-61f8-11ee-8c99-0242ac120002",
+      "customer_email": "jane.smith@example.com",
+      "account_number": "111213141",
+      "account_balance": 2500.0,
+      "account_original_location": "London, UK"
+    }
+  ],
+  "transactions": [
+    {
+      "transaction_id": "4f28be62-61f7-11ee-8c99-0242ac120002",
+      "account_number": "123456789",
+      "transaction_type": "deposit",
+      "transaction_amount": 1000.0,
+      "transaction_timestamp": 1698418345,
+      "location": "New York, USA",
+      "anomaly_type": "amount",
+      "anomaly_score": 0.8
+    },
+    {
+      "transaction_id": "5f53b9c0-61f7-11ee-8c99-0242ac120002",
+      "account_number": "987654321",
+      "transaction_type": "withdrawal",
+      "transaction_amount": 500.0,
+      "transaction_timestamp": 1698418350,
+      "location": "New York, USA",
+      "anomaly_type": "none",
+      "anomaly_score": 0.0
+    },
+    {
+      "transaction_id": "7c8df394-61f8-11ee-8c99-0242ac120002",
+      "account_number": "111213141",
+      "transaction_type": "transfer",
+      "transaction_amount": 750.0,
+      "transaction_timestamp": 1698418400,
+      "location": "Tokyo, Japan",
+      "anomaly_type": "location",
+      "anomaly_score": 0.9
+    }
+  ],
+  "logins": [
+    {
+      "login_timestamp": "2023-10-26T13:45:30",
+      "ip_address": "192.168.0.1",
+      "login_success": true
+    },
+    {
+      "login_timestamp": "2023-10-26T14:00:00",
+      "ip_address": "10.0.0.2",
+      "login_success": false
+    }
+  ]
+}

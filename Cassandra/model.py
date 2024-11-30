@@ -1,192 +1,68 @@
-from cassandra.cluster import Cluster
-from cassandra.auth import PlainTextAuthProvider
-from cassandra.query import SimpleStatement
-import uuid
-from datetime import datetime
-from config import CASSANDRA_HOSTS, CASSANDRA_PORT, KEYSPACE
+from model import (
+    connect_to_cassandra,
+    create_keyspace,
+    create_tables,
+    bulk_insert_from_json,
+    query_recent_transactions,
+    query_anomalies,
+    query_login_attempts,
+    query_cross_border_transactions,
+)
+from config import KEYSPACE
+import json
 
 
-# =======================
-# Cassandra Connection
-# =======================
+def main():
+    # Connect to Cassandra
+    session = connect_to_cassandra()
+    print("Connected to Cassandra.")
 
-def connect_to_cassandra():
-    cluster = Cluster(contact_points=CASSANDRA_HOSTS, port=CASSANDRA_PORT)
-    session = cluster.connect()
-    return session
+    # Create keyspace and tables
+    create_keyspace(session)
+    print(f"Keyspace '{KEYSPACE}' ensured.")
 
-# =======================
-# Create Keyspace
-# =======================
+    create_tables(session)
+    print("Tables created.")
 
-def create_keyspace(session):
-    create_keyspace_cql = f"""
-    CREATE KEYSPACE IF NOT EXISTS {KEYSPACE}
-    WITH replication = {{
-        'class': 'SimpleStrategy',
-        'replication_factor': '3'
-    }};
-    """
-    session.execute(create_keyspace_cql)
+    # Load and insert bulk data from JSON
+    with open("example_data.json", "r") as file:
+        data = json.load(file)
+        bulk_insert_from_json(session, data)
+    print("Bulk data inserted from 'example_data.json'.")
 
-# =======================
-# Create Tables
-# =======================
+    # Query data
+    # Replace with IDs present in your JSON data for testing
+    test_account_id = uuid.UUID(data["accounts"][0]["account_id"])
+    test_customer_id = uuid.UUID(data["customers"][0]["customer_id"])
 
-def create_tables(session):
-    session.set_keyspace(KEYSPACE)
+    # 1. Query Recent Transactions
+    print("\nRecent Transactions:")
+    recent_transactions = query_recent_transactions(session, test_account_id, limit=5)
+    for row in recent_transactions:
+        print(row)
 
-    tables = [
-        """
-        CREATE TABLE IF NOT EXISTS Transaction_History (
-            account_id uuid,
-            timestamp timestamp,
-            transaction_id uuid,
-            amount decimal,
-            transaction_type text,
-            location text,
-            PRIMARY KEY (account_id, timestamp)
-        ) WITH CLUSTERING ORDER BY (timestamp DESC);
-        """,
-        """
-        CREATE TABLE IF NOT EXISTS Anomaly_Detection (
-            account_id uuid,
-            timestamp timestamp,
-            transaction_id uuid,
-            anomaly_type text,
-            anomaly_score int,
-            PRIMARY KEY (account_id, timestamp)
-        ) WITH CLUSTERING ORDER BY (timestamp DESC);
-        """,
-        """
-        CREATE TABLE IF NOT EXISTS Frequent_Withdrawals (
-            account_id uuid,
-            timestamp timestamp,
-            transaction_id uuid,
-            amount decimal,
-            PRIMARY KEY (account_id, timestamp)
-        ) WITH CLUSTERING ORDER BY (timestamp DESC);
-        """,
-        """
-        CREATE TABLE IF NOT EXISTS Customer_Login_History (
-            customer_id uuid,
-            login_timestamp timestamp,
-            ip_address text,
-            login_success boolean,
-            PRIMARY KEY (customer_id, login_timestamp)
-        ) WITH CLUSTERING ORDER BY (login_timestamp DESC);
-        """,
-        """
-        CREATE TABLE IF NOT EXISTS Cross_Border_Transactions (
-            account_id uuid,
-            timestamp timestamp,
-            transaction_id uuid,
-            foreign_location text,
-            amount decimal,
-            PRIMARY KEY (account_id, timestamp)
-        ) WITH CLUSTERING ORDER BY (timestamp DESC);
-        """
-    ]
+    # 2. Query Anomalies
+    print("\nAnomaly Detection Results:")
+    anomalies = query_anomalies(session, test_account_id)
+    for row in anomalies:
+        print(row)
 
-    for table_cql in tables:
-        session.execute(table_cql)
+    # 3. Query Customer Login Attempts
+    print("\nCustomer Login Attempts:")
+    login_attempts = query_login_attempts(session, test_customer_id, limit=5)
+    for row in login_attempts:
+        print(row)
 
-# =======================
-# Insert Example Data
-# =======================
+    # 4. Query Cross-Border Transactions
+    print("\nCross-Border Transactions:")
+    cross_border_transactions = query_cross_border_transactions(session, test_account_id)
+    for row in cross_border_transactions:
+        print(row)
 
-def insert_example_data(session):
-    session.set_keyspace(KEYSPACE)
-
-    account_id = uuid.uuid4()
-    customer_id = uuid.uuid4()
-
-    # Insert transaction history
-    for i in range(3):
-        insert_transaction_history(session, account_id, 1000 + i * 100, 'deposit', 'New York, USA')
-
-    # Insert anomaly detection data
-    session.execute("""
-    INSERT INTO Anomaly_Detection (account_id, timestamp, transaction_id, anomaly_type, anomaly_score)
-    VALUES (%s, %s, %s, %s, %s);
-    """, (account_id, datetime.now(), uuid.uuid4(), 'suspicious_pattern', 85))
-
-    # Insert frequent withdrawals
-    session.execute("""
-    INSERT INTO Frequent_Withdrawals (account_id, timestamp, transaction_id, amount)
-    VALUES (%s, %s, %s, %s);
-    """, (account_id, datetime.now(), uuid.uuid4(), 3000))
-
-    # Insert login history
-    session.execute("""
-    INSERT INTO Customer_Login_History (customer_id, login_timestamp, ip_address, login_success)
-    VALUES (%s, %s, %s, %s);
-    """, (customer_id, datetime.now(), '192.168.0.1', True))
-
-    # Insert cross-border transaction
-    session.execute("""
-    INSERT INTO Cross_Border_Transactions (account_id, timestamp, transaction_id, foreign_location, amount)
-    VALUES (%s, %s, %s, %s, %s);
-    """, (account_id, datetime.now(), uuid.uuid4(), 'Tokyo, Japan', 5000))
-
-    return account_id, customer_id
-
-# =======================
-# Helper Insert Functions
-# =======================
-
-def insert_transaction_history(session, account_id, amount, transaction_type, location):
-    insert_cql = """
-    INSERT INTO Transaction_History (account_id, timestamp, transaction_id, amount, transaction_type, location)
-    VALUES (%s, %s, %s, %s, %s, %s);
-    """
-    transaction_id = uuid.uuid4()
-    session.execute(insert_cql, (
-        account_id,
-        datetime.now(),
-        transaction_id,
-        amount,
-        transaction_type,
-        location
-    ))
-
-# =======================
-# Query Functions
-# =======================
-
-def query_recent_transactions(session, account_id, limit=10):
-    query = """
-    SELECT * FROM Transaction_History
-    WHERE account_id = %s
-    LIMIT %s;
-    """
-    rows = session.execute(query, (account_id, limit))
-    return list(rows)
+    # Clean up
+    session.shutdown()
+    print("Cassandra session closed.")
 
 
-def query_anomalies(session, account_id):
-    query = """
-    SELECT * FROM Anomaly_Detection
-    WHERE account_id = %s;
-    """
-    rows = session.execute(query, (account_id,))
-    return list(rows)
-
-
-def query_login_attempts(session, customer_id, limit=5):
-    query = """
-    SELECT * FROM Customer_Login_History
-    WHERE customer_id = %s
-    LIMIT %s;
-    """
-    rows = session.execute(query, (customer_id, limit))
-    return list(rows)
-
-
-def query_cross_border_transactions(session, account_id):
-    query = """
-    SELECT * FROM Cross_Border_Transactions
-    WHERE account_id = %s;
-    """
-    rows = session.execute(query, (account_id,))
-    return list(rows)
+if __name__ == "__main__":
+    main()
