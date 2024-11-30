@@ -5,10 +5,14 @@ import os, pydgraph
 
 # third-party modules
 from dotenv import load_dotenv
+import dgraph.client
 
 # custom modules
 import dgraphUtils, mongodbUtils
 import mongodb.data.data as mongodb_data
+
+client_stub = pydgraph.DgraphClientStub('localhost:9080')
+dgraph_client = pydgraph.DgraphClient(client_stub)
 
 def printMenu():
     options = {
@@ -29,14 +33,15 @@ def printMenu():
 def printTransactionHistoryMenu():
     """Submenu for transaction history options."""
     print("Transaction History Options:")
-    print("1. Show Transaction History")
-    print("2. Show Risky Transactions")
-    print("3. Show Suspicious Accounts Transactions")
-    print("4. Frequent Transactions")
-    print("5. Geolocation Flagged Transactions")
-    print("6. Card Transactions")
-    print("7. IP Address Monitoring")
-    print("8. Shared Attribute Detection")
+    print("1. Show Customer Information")
+    print("2. Show Transaction History")
+    print("3. Show Risky Transactions")
+    print("4. Show Suspicious Accounts Transactions")
+    print("5. Frequent Transactions")
+    print("6. Geolocation Flagged Transactions")
+    print("7. Card Transactions")
+    print("8. IP Address Monitoring")
+    print("9. Shared Attribute Detection")
     print()
 
 def handleTransactionHistory():
@@ -46,30 +51,24 @@ def handleTransactionHistory():
     try:
         option = int(input("Enter your choice: "))
 
-        if option == 3:
-            # Implement logic to show transaction history
-            print("Showing transaction history...")
+        if option == 1:
+            dgraph.client.query_customer_info()
+        elif option == 2:
+            dgraph.client.query_transaction_history()
+        elif option == 3:
+            dgraph.client.query_risky_transactions()
         elif option == 4:
-            # Implement logic to show risky transactions
-            print("Showing risky transactions...")
+            dgraph.client.query_suspicious_accounts()
         elif option == 5:
-            # Implement logic to show suspicious accounts transactions
-            print("Showing suspicious accounts transactions...")
+            dgraph.client.query_frequent_transactions()
         elif option == 6:
-            # Implement logic for frequent transactions
-            print("Showing frequent transactions...")
+            dgraph.client.query_transactions_in_risky_locations() 
         elif option == 7:
-            # Implement logic for geolocation flagged transactions
-            print("Showing geolocation flagged transactions...")
+            dgraph.client.query_cards_by_type("Visa") 
         elif option == 8:
-            # Implement logic for card transactions
-            print("Showing card transactions...")
+            dgraph.client.query_ip_addresses_and_customers()
         elif option == 9:
-            # Implement logic for IP address monitoring
-            print("Showing IP address monitoring...")
-        elif option == 10:
-            # Implement logic for shared attribute detection
-            print("Showing shared attribute detection...")
+            dgraph.client.query_customers_with_duplicate_attributes()
         else:
             print("Invalid option. Please try again.")
     except ValueError:
@@ -77,9 +76,6 @@ def handleTransactionHistory():
 
 def main():
     load_dotenv()  # loads environment variables from .env file
-
-    client_stub = pydgraph.DgraphClientStub('localhost:9080')
-    client = pydgraph.DgraphClient(client_stub)
 
     # environment variables
     CUSTOMER_EMAIL = os.getenv("CUSTOMER_EMAIL", "john.doe@example.com")
@@ -92,7 +88,7 @@ def main():
 
             if opt == 0:
                 mongodb_data.load_data_from_json()
-                dgraphUtils.load_data(client)
+                dgraphUtils.load_data(dgraph_client)
             elif opt == 1:
                 mongodbUtils.signUp()
             elif opt == 2:

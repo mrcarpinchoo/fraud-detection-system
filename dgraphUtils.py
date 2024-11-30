@@ -23,6 +23,7 @@ def create_schema(client):
         status: string
         date: datetime
         is_risky: bool
+        receiving_account: string
         linked_customer: Customer
         linked_geolocation: Geolocation
         session: Session
@@ -55,7 +56,7 @@ def create_schema(client):
         session_id: string
         start_time: datetime
         end_time: datetime
-        ip_address: IPAddress
+        session_ip_address: string
     }
 
     type Card {
@@ -84,9 +85,10 @@ def create_schema(client):
     amount: float @index(float) . 
     status: string @index(exact) . 
     date: datetime . 
-    is_risky: bool @index(bool) .   
+    is_risky: bool @index(bool) .  
+    receiving_account: string @index(exact) . 
     session: uid . 
-    linked_geolocation: uid . 
+    linked_geolocation: uid @reverse . 
 
     location: string @index(exact) . 
     latitude: float . 
@@ -102,6 +104,7 @@ def create_schema(client):
     session_id: string @index(exact) . 
     start_time: datetime . 
     end_time: datetime . 
+    session_ip_address: string @index(exact) .
 
     card_id: string @index(exact) . 
     card_type: string @index(exact) . 
@@ -119,8 +122,8 @@ def create_schema(client):
     devices: [uid] @reverse . 
     linked_account: uid @reverse . 
     sessions: [uid] @reverse . 
-    card: uid . 
-    ip_address: uid . 
+    card: uid @reverse . 
+    ip_address: uid @reverse . 
     attributes: [uid] @reverse . 
     """
     op = pydgraph.Operation(schema=schema)
@@ -183,7 +186,7 @@ sample_data = {
             "session_id": f"SESSION{i:03d}",
             "start_time": (datetime.now() - timedelta(days=random.randint(0, 30))).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "end_time": datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "ip_address": f"192.168.1.{random.randint(1, 255)}"
+            "session_ip_address": f"192.168.1.{random.randint(1, 255)}"
         } for i in range(1, 21)  
     ],
     
@@ -370,6 +373,91 @@ def bulk_insert_data(client):
             txn.commit()
         except Exception as e:
             print(f"Error creating transaction {transaction['transaction_id']}: {e}")
+        finally:
+            txn.discard()
+
+    fixed_receiving_account = "ACC001" 
+    for i in range(21):
+        txn = client.txn()
+        try:
+            random_customer_id = f"CUST{random.randint(1, 20):03d}"
+            random_geolocation = random.choice(sample_data["geolocations"])["location"]
+            
+            transaction_data = {
+                "uid": "_:transaction",
+                "transaction_id": f"TXN{i+1:03d}",
+                "amount": round(random.uniform(10, 5000), 2),
+                "status": random.choice(["completed", "pending", "failed"]),
+                "date": (datetime.now() - timedelta(days=random.randint(0, 30))).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "is_risky": random.choice([True, False]),
+                "receiving_account": fixed_receiving_account,
+                "linked_customer": {"uid": uids["customers"][random_customer_id]},
+                "linked_geolocation": {"uid": uids["geolocations"][random_geolocation]}
+            }
+            resp = txn.mutate(set_obj=transaction_data)
+            txn.commit()
+        except Exception as e:
+            print(f"Error creating transaction TXN{i+1:03d}: {e}")
+        finally:
+            txn.discard()
+
+        hardcoded_customers = [
+        {
+            "customer_id": "CUST001",
+            "name": "Customer One",
+            "address": "123 Main Street",
+            "email": "customer1@example.com",
+            "risk_score": round(random.uniform(0.1, 0.9), 2)
+        },
+        {
+            "customer_id": "CUST002",
+            "name": "Customer Two",
+            "address": "123 Main Street",  
+            "email": "customer2@example.com",
+            "risk_score": round(random.uniform(0.1, 0.9), 2)
+        },
+        {
+            "customer_id": "CUST003",
+            "name": "Customer Three",
+            "address": "456 Elm Street",
+            "email": "duplicate@example.com", 
+            "risk_score": round(random.uniform(0.1, 0.9), 2)
+        },
+        {
+            "customer_id": "CUST004",
+            "name": "Customer Four",
+            "address": "789 Oak Street",
+            "email": "duplicate@example.com", 
+            "risk_score": round(random.uniform(0.1, 0.9), 2)
+        },
+        {
+            "customer_id": "CUST005",
+            "name": "Customer Five",
+            "address": "101 Pine Street",
+            "email": "customer5@example.com",
+            "risk_score": round(random.uniform(0.1, 0.9), 2)
+        },
+        {
+            "customer_id": "CUST006",
+            "name": "Customer Five", 
+            "address": "202 Maple Street",
+            "email": "customer6@example.com",
+            "risk_score": round(random.uniform(0.1, 0.9), 2)
+        }
+    ]
+
+    for customer in hardcoded_customers:
+        txn = client.txn()
+        try:
+            customer_data = {
+                "uid": "_:customer",
+                **customer
+            }
+            resp = txn.mutate(set_obj=customer_data)
+            txn.commit()
+            uids["customers"][customer["customer_id"]] = resp.uids["customer"]
+        except Exception as e:
+            print(f"Error creating customer {customer['customer_id']}: {e}")
         finally:
             txn.discard()
 
