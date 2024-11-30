@@ -8,13 +8,16 @@ from dotenv import load_dotenv
 import dgraph.client
 
 # custom modules
-import dgraphUtils, mongodbUtils, cassandra.cassandraUtils
+import dgraphUtils, mongodbUtils, cassandraUtils
 import mongodb.data.data as mongodb_data
-from cassandra.config import KEYSPACE
+import json
 
 client_stub = pydgraph.DgraphClientStub('localhost:9080')
 dgraph_client = pydgraph.DgraphClient(client_stub)
 
+session = cassandraUtils.connect_to_cassandra()
+with open("example_data.json", "r") as file:
+    data = json.load(file)
 
 def printMenu():
     options = {
@@ -95,15 +98,15 @@ def handleTransactionHistoryCassandra():
         option = int(input("Enter your choice: "))
 
         if option == 1:
-            cassandra.cassandraUtils.query_recent_transactions()
+            cassandraUtils.query_recent_transactions(session, limit=10)
         elif option == 2:
-            cassandra.cassandraUtils.query_withdrawals()
+            cassandraUtils.query_withdrawals(session)
         elif option == 3:
-            cassandra.cassandraUtils.query_anomalies()
+            cassandraUtils.query_anomalies(session)
         elif option == 4:
-            cassandra.cassandraUtils.query_login_attempts()
+            cassandraUtils.query_login_attempts(session, limit=5)
         elif option == 5:
-            cassandra.cassandraUtils.query_cross_border_transactions()
+            cassandraUtils.query_cross_border_transactions(session)
         else:
             print("Invalid option. Please try again.")
     except ValueError:
@@ -112,6 +115,7 @@ def handleTransactionHistoryCassandra():
 
 def main():
     load_dotenv()  # loads environment variables from .env file
+    
 
     # environment variables
     CUSTOMER_EMAIL = os.getenv("CUSTOMER_EMAIL", "john.doe@example.com")
@@ -123,8 +127,9 @@ def main():
             opt = int(input("Enter your choice: "))
 
             if opt == 0:
-                mongodb_data.load_data_from_json()
-                dgraphUtils.load_data(dgraph_client)
+                '''mongodb_data.load_data_from_json()
+                dgraphUtils.load_data(dgraph_client)'''
+                cassandraUtils.bulk_insert_from_json(session, data)
             elif opt == 1:
                 mongodbUtils.signUp()
             elif opt == 2:

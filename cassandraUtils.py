@@ -1,7 +1,7 @@
 from cassandra.cluster import Cluster
 import uuid
 from datetime import datetime
-from config import CASSANDRA_HOSTS, CASSANDRA_PORT, KEYSPACE
+from cassandra_config import CASSANDRA_HOSTS, CASSANDRA_PORT, KEYSPACE
 import json
 
 with open("example_data.json", "r") as file:
@@ -15,7 +15,9 @@ with open("example_data.json", "r") as file:
 def connect_to_cassandra():
     cluster = Cluster(contact_points=CASSANDRA_HOSTS, port=CASSANDRA_PORT)
     session = cluster.connect()
+    session.set_keyspace(KEYSPACE)  # Set the keyspace immediately
     return session
+
 
 # =======================
 # Create Keyspace
@@ -192,7 +194,9 @@ def query_recent_transactions(session, limit=10):
     SELECT * FROM Transaction_History
     LIMIT %s;
     """
-    rows = session.execute(query, (limit))
+    print("hola")
+    rows = session.execute(query, limit)
+    print("hola")
     return list(rows)
 
 
