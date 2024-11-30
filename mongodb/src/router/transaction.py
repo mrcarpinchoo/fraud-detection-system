@@ -7,6 +7,45 @@ from mongodb.src.model.Transaction import Transaction
 
 router = APIRouter()
 
+@router.get(
+    "/{account_number}/summary",
+    # response_model = Customer,
+    response_description = "",
+    status_code = status.HTTP_200_OK
+)
+def getTransactionSummary(account_number: str, request: Request):
+    pipeline = [
+        {
+            "$match": {
+                "account_number": account_number,
+                "transaction_type": { "$in": [ "deposit", "withdrawal" ] }
+            }
+        },
+        {
+            "$group": {
+                "_id": "$transaction_type",
+                "total_amount": { "$sum": "$transaction_amount" }
+            }
+        }
+    ]
+
+    try:
+        result = request.app.database["transactions"].aggregate(pipeline)
+
+        if not result: raise HTTPException(
+            status_code = status.HTTP_404_NOT_FOUND,
+            detail = f"Account with number {account_number} does not exist."
+        )
+        # end if
+
+        return list(result)
+    except HTTPException as e: raise e
+    except Exception as e: raise HTTPException(
+        status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail = f"Internal server error: {e}"
+    )
+# end def
+
 @router.post(
     "/",
     response_model = Transaction,

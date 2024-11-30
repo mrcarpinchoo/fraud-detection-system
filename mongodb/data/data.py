@@ -100,7 +100,7 @@ def generate_transaction(customer_email, account_number):
 # Function to generate data and insert it into MongoDB
 def load_data_from_json():
     # Load customer data
-    customer_data_list = read_json_file("data/customers.json")
+    customer_data_list = read_json_file("mongodb/data/customers.json")
     
     for customer_data in customer_data_list:
         # Insert customer into DB
@@ -133,4 +133,4 @@ def load_data_from_json():
     print("Data loaded successfully!")
 
 # Run the data loading process
-load_data_from_json()
+# load_data_from_json()

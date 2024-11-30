@@ -1,13 +1,14 @@
+#!/usr/bin/env python3
+
 # core modules
-import os
-import pydgraph
+import os, pydgraph
 
 # third-party modules
 from dotenv import load_dotenv
 
 # custom modules
-import dgraphUtils
-import mongodbUtils
+import dgraphUtils, mongodbUtils
+import mongodb.data.data as mongodb_data
 
 def printMenu():
     options = {
@@ -16,7 +17,9 @@ def printMenu():
         2: "Create new account",
         3: "Retrieve customer information",
         4: "Perform transaction",
-        5: "Dgraph Transaction Menu" 
+        5: "Dgraph Transaction Menu",
+        6: "Generate transaction summary",
+        7: "Exit"
     }
 
     for key in options.keys(): print(f"{key}. {options[key]}")
@@ -88,6 +91,7 @@ def main():
             opt = int(input("Enter your choice: "))
 
             if opt == 0:
+                mongodb_data.load_data_from_json()
                 dgraphUtils.load_data(client)
             elif opt == 1:
                 mongodbUtils.signUp()
@@ -99,6 +103,8 @@ def main():
                 mongodbUtils.performTransaction(CUSTOMER_EMAIL)
             elif opt == 5:
                 handleTransactionHistory()  
+            elif opt == 6: mongodbUtils.generateTransactionSummary(CUSTOMER_EMAIL)
+            elif opt == 7: break
             else:
                 print("Invalid option. Please try again.")
         except ValueError:

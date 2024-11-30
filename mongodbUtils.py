@@ -315,5 +315,51 @@ def performTransaction(customer_email):
     # end def
 # end def
 
+def generateTransactionSummary(customer_email):
+    print("Transaction Summary")
+
+    print()
+
+    print("Select the account to generate the transaction summary:")
+
+    print()
+
+    accounts = getAccountsByEmail(customer_email)
+
+    printCustomerAccounts(accounts)
+
+    opt = int(input("Enter your choice: "))
+
+    account_number = accounts[opt - 1]["account_number"]
+
+    print()
+
+    # request
+    suffix = f"/transactions/{account_number}/summary"
+
+    endpoint = f"{API_URL}{suffix}"
+
+    res = requests.get(endpoint)
+
+    if not res.ok:
+        print(f"Failed generate transaction summary: {res.json()}")
+        return None
+    # end if
+
+    print("Report")
+
+    print()
+
+    for transaction in res.json():
+        transaction_type = transaction['_id'].capitalize()  # capitalize the first letter
+        
+        total_amount = transaction['total_amount']
+        
+        print(f"{transaction_type}: ${total_amount:,.2f}")
+    # end for-in
+
+    print()
+# end def
+
 # environment variables
 API_URL = os.getenv("API_URL", "http://localhost:8000/api")
