@@ -27,7 +27,7 @@ def main():
     load_dotenv() # loads environment variables from .env file
 
     # environment variables
-    CUSTOMER_EMAIL = os.getenv("CUSTOMER_EMAIL", "lionel.messi@iteso.mx")
+    CUSTOMER_EMAIL = os.getenv("CUSTOMER_EMAIL", "john.doe@example.com")
 
     while (True):
         printMenu()
